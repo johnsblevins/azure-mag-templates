@@ -3,34 +3,34 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "existingVNETName": {
-      "value": "myvnet"
+      "value": "eastus2-vnet-1"
     },
     "existingSubnetName": {
-      "value": "subnet"
+      "value": "core-subnet"
     },
     "vmSize": {
       "value": "Standard_A2"
     },
     "domainToJoin": {
-      "value": "contoso.local"
+      "value": "ad.magsolutions.us"
     },
     "domainUsername": {
-      "value": "azuerUser"
+      "value": "azureadmin"
     },
     "domainPassword": {
-      "value": "P@ssword!"
+      "value": "password123!!"
     },
     "domainJoinOptions": {
       "value": 3
     },
     "vmAdminUsername": {
-      "value": "azureUser"
+      "value": "azureadmin"
     },
     "vmAdminPassword": {
-      "value": "P@ssword!"
+      "value": "password123!!"
     },
     "dnsLabelPrefix": {
-      "value": "GEN-UNIQUE" 
+      "value": "" 
     }
   }
 }
