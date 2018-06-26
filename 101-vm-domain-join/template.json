@@ -4,12 +4,15 @@
   "parameters": {
     "existingVNETName": {
       "type": "string",
-      "metadata": {
+      "allowedValues": ["eastus2-vnet-1","centralus-vnet-1","westus2-vnet-1"],
+	  "metadata": {
         "description": "Existing VNET that contains the domain controller"
       }
     },
     "existingSubnetName": {
       "type": "string",
+	  "defaultValue": "core-subnet",
+	  "allowedValues": ["core-subnet"],
       "metadata": {
         "description": "Existing subnet that contains the domain controller"
       }
@@ -17,24 +20,26 @@
     "dnsLabelPrefix": {
       "type": "string",
       "metadata": {
-        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
+        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.ad.magsolutions.us'."
       }
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_A2",
+      "defaultValue": "Standard_B2s",
       "metadata": {
         "description": "The size of the virtual machines"
       }
     },
     "domainToJoin": {
       "type": "string",
+	  "defaultValue": "ad.magsolutions.us",
       "metadata": {
         "description": "The FQDN of the AD domain"
       }
     },
     "domainUsername": {
       "type": "string",
+	  "defaultValue": "azureadmin",
       "metadata": {
         "description": "Username of the account on the domain"
       }
@@ -47,7 +52,7 @@
     },
     "ouPath": {
       "type": "string",
-      "defaultValue": "",
+      "defaultValue": "OU=Systems; OU=Enterprise; DC=AD; DC=MAGSOLUTIONS; DC=us",
       "metadata": {
         "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: \"OU=testOU; DC=domain; DC=Domain; DC=com\""
       }
@@ -61,6 +66,7 @@
     },
     "vmAdminUsername": {
       "type": "string",
+	  "defaultValue": "azureadmin",
       "metadata": {
         "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'admin','administrator"
       }
