@@ -17,6 +17,13 @@
         "description": "Existing subnet that contains the domain controller"
       }
     },
+	"staticIP": {
+      "type": "string",
+	  "allowedValues": ["Yes","No"],
+      "metadata": {
+        "description": "Existing subnet that contains the domain controller"
+      }
+    },
     "dnsLabelPrefix": {
       "type": "string",
       "metadata": {
@@ -129,7 +136,7 @@
           {
             "name": "ipconfig",
             "properties": {
-              "privateIPAllocationMethod": "Dynamic",
+              "privateIPAllocationMethod": [if(equals(parameters('staticIP'),'Yes'), "Static", "Dynamic")],
               "publicIPAddress": {
                 "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
               },
