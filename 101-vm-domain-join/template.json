@@ -59,7 +59,7 @@
     },
     "ouPath": {
       "type": "string",
-      "defaultValue": "OU=Systems; OU=Enterprise; DC=AD; DC=MAGSOLUTIONS; DC=us",
+      "defaultValue": "OU=Systems,OU=Enterprise,DC=AD,DC=MAGSOLUTIONS,DC=us",
       "metadata": {
         "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: \"OU=testOU; DC=domain; DC=Domain; DC=com\""
       }
