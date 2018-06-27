@@ -65,7 +65,7 @@
     },
     "ouPath": {
       "type": "string",
-      "defaultValue": "OU=Systems,OU=Enterprise,DC=AD,DC=MAGSOLUTIONS,DC=us",
+      "defaultValue": "OU=Servers,OU=Enterprise,DC=AD,DC=MAGSOLUTIONS,DC=us",
       "metadata": {
         "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: \"OU=testOU; DC=domain; DC=Domain; DC=com\""
       }
@@ -95,6 +95,18 @@
       "allowedValues": ["East US 2", "Central US", "West US 2"],
       "metadata": {
         "description": "Location for all resources."
+      }
+    },
+    "solution": {
+      "type": "string",      
+      "metadata": {
+        "description": "Tag to identify associated solution."
+      }
+    },
+    "ring": {
+      "type": "string",      
+      "metadata": {
+        "description": "Tag to identify associate solution ring (startup/shutdown order)"
       }
     }
   },
@@ -153,6 +165,10 @@
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('dnsLabelPrefix')]",
       "location": "[parameters('location')]",
+	  "tags": {
+        "Solution": "[parameters('solution')]",
+        "Ring": "[parameters('ring')]"
+      },
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
       ],
