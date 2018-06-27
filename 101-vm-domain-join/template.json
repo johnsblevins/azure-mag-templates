@@ -99,7 +99,6 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name))]",
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "windowsOSVersion": "2016-Datacenter",
@@ -107,15 +106,6 @@
     "subnetId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVNETName'), parameters('existingSubnetName'))]"
   },
   "resources": [
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('storageAccountName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "accountType": "Standard_LRS"
-      }
-    },
     {
       "condition": "[equals(parameters('privateIPAllocationMethod'), 'Static')]",
 	  "apiVersion": "2015-06-15",
@@ -164,7 +154,6 @@
       "name": "[parameters('dnsLabelPrefix')]",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName'))]",
         "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
       ],
       "properties": {
@@ -187,16 +176,7 @@
             "name": "[concat(parameters('dnsLabelPrefix'),'_OsDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          },
-          "dataDisks": [
-            {
-              "name": "[concat(parameters('dnsLabelPrefix'),'_dataDisk1')]",
-              "caching": "None",
-              "createOption": "Empty",
-              "diskSizeGB": "1000",
-              "lun": 0
-            }
-          ]
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
@@ -207,12 +187,33 @@
         },
         "diagnosticsProfile": {
           "bootDiagnostics": {
-            "enabled": "true",
-            "storageUri": "[reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2015-06-15').primaryEndpoints.blob]"
+            "enabled": "false"            
           }
         }
       }
     },
+	{
+        "type": "Microsoft.DevTestLab/schedules",
+        "name": "[concat('shutdown-computevm-',parameters('dnsLabelPrefix'))]",
+        "apiVersion": "2016-05-15",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('dnsLabelPrefix'))]"
+        ],
+        "properties": {
+            "status": "Enabled",
+            "taskType": "ComputeVmShutdownTask",
+            "dailyRecurrence": {
+                "time": "1900"
+            },
+            "timeZoneId": "Eastern Standard Time",
+            "notificationSettings": {
+                 "status": "Disabled",
+                 "timeInMinutes": 30
+            },
+            "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines',parameters('dnsLabelPrefix'))]"
+        }       
+	},
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Compute/virtualMachines/extensions",
