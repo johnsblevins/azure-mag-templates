@@ -17,11 +17,17 @@
         "description": "Existing subnet that contains the domain controller"
       }
     },
-	"staticIP": {
+	"privateIPAllocationMethod": {
       "type": "string",
-	  "allowedValues": ["Yes","No"],
+	  "allowedValues": ["Static","Dynamic"],
       "metadata": {
         "description": "Existing subnet that contains the domain controller"
+      }
+    },
+	"privateIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Required if privateIPAllocationMethod set to Static."
       }
     },
     "dnsLabelPrefix": {
@@ -86,7 +92,7 @@
     },
     "location": {
       "type": "string",
-      "defaultValue": "[resourceGroup().location]",
+      "allowedValues": ["East US 2", "Central US", "West US 2"],
       "metadata": {
         "description": "Location for all resources."
       }
@@ -98,22 +104,9 @@
     "imageOffer": "WindowsServer",
     "windowsOSVersion": "2016-Datacenter",
     "nicName": "[concat(parameters('dnsLabelPrefix'),'Nic')]",
-    "publicIPName": "[concat(parameters('dnsLabelPrefix'),'Pip')]",
     "subnetId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVNETName'), parameters('existingSubnetName'))]"
   },
   "resources": [
-    {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "publicIPAllocationMethod": "Dynamic",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
-        }
-      }
-    },
     {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Storage/storageAccounts",
@@ -124,22 +117,39 @@
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "condition": "[equals(parameters('privateIPAllocationMethod'), 'Static')]",
+	  "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[variables('nicName')]",
+      "name": "[concat(variables('nicName'),'-','Static')]",
       "location": "[parameters('location')]",
-      "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPName'))]"
-      ],
       "properties": {
         "ipConfigurations": [
           {
             "name": "ipconfig",
             "properties": {
-              "privateIPAllocationMethod": [if(equals(parameters('staticIP'),'Yes'), "Static", "Dynamic")],
-              "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
-              },
+			  "privateIPAddress": "[parameters('privateIPAddress')]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+	{
+	  "condition": "[equals(parameters('privateIPAllocationMethod'), 'Dynamic')]",
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'-','Dynamic')]",
+      "location": "[parameters('location')]",
+      
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
               "subnet": {
                 "id": "[variables('subnetId')]"
               }
@@ -155,7 +165,7 @@
       "location": "[parameters('location')]",
       "dependsOn": [
         "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -191,7 +201,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
             }
           ]
         },
@@ -230,3 +240,4 @@
     }
   ]
 }
+
