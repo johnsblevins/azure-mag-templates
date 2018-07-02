@@ -2,7 +2,14 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "existingVNETName": {
+    "OSVersion": {
+      "type": "string",
+      "allowedValues": ["2016-Datacenter","2012-R2-Datacenter","2012-Datacenter","2008-R2-SP1","2016-Nano-Server","2016-Datacenter-Server-Core","2016-Datacenter-with-Containers","2016-Datacenter-with-RDSH"],
+	  "metadata": {
+        "description": "Existing VNET that contains the domain controller"
+      }
+    },
+	"existingVNETName": {
       "type": "string",
       "allowedValues": ["eastus2-vnet-1","centralus-vnet-1","westus2-vnet-1"],
 	  "metadata": {
@@ -113,7 +120,6 @@
   "variables": {
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
-    "windowsOSVersion": "2016-Datacenter",
     "nicName": "[concat(parameters('dnsLabelPrefix'),'Nic')]",
     "subnetId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVNETName'), parameters('existingSubnetName'))]"
   },
@@ -185,7 +191,7 @@
           "imageReference": {
             "publisher": "[variables('imagePublisher')]",
             "offer": "[variables('imageOffer')]",
-            "sku": "[variables('windowsOSVersion')]",
+            "sku": "[parameters('OSVersion')]",
             "version": "latest"
           },
           "osDisk": {
