@@ -1,0 +1,36 @@
+{
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "existingVNETName": {
+      "value": "eastus2-vnet-1"
+    },
+    "existingSubnetName": {
+      "value": "core-subnet"
+    },
+    "vmSize": {
+      "value": "Standard_A2"
+    },
+    "domainToJoin": {
+      "value": "ad.magsolutions.us"
+    },
+    "domainUsername": {
+      "value": "azureadmin"
+    },
+    "domainPassword": {
+      "value": "password123!!"
+    },
+    "domainJoinOptions": {
+      "value": 3
+    },
+    "vmAdminUsername": {
+      "value": "azureadmin"
+    },
+    "vmAdminPassword": {
+      "value": "password123!!"
+    },
+    "dnsLabelPrefix": {
+      "value": "" 
+    }
+  }
+}

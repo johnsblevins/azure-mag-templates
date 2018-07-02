@@ -1,0 +1,201 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "existingVNETName": {
+      "type": "string",
+      "allowedValues": ["eastus2-vnet-1","centralus-vnet-1","westus2-vnet-1"],
+	  "metadata": {
+        "description": "Existing VNET that contains the domain controller"
+      }
+    },
+    "existingSubnetName": {
+      "type": "string",
+	  "defaultValue": "core-subnet",
+	  "allowedValues": ["core-subnet"],
+      "metadata": {
+        "description": "Existing subnet that contains the domain controller"
+      }
+    },
+	"privateIPAllocationMethod": {
+      "type": "string",
+	  "allowedValues": ["Static","Dynamic"],
+      "metadata": {
+        "description": "Existing subnet that contains the domain controller"
+      }
+    },
+	"privateIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "Required if privateIPAllocationMethod set to Static."
+      }
+    },
+    "dnsLabelPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.ad.magsolutions.us'."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_B2s",
+      "metadata": {
+        "description": "The size of the virtual machines"
+      }
+    },
+    "vmAdminUsername": {
+      "type": "string",
+	  "defaultValue": "azureadmin",
+      "metadata": {
+        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'admin','administrator"
+      }
+    },
+    "vmAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password for the administrator account of the new VM and the domain"
+      }
+    },
+    "location": {
+      "type": "string",
+      "allowedValues": ["East US 2", "Central US", "West US 2"],
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "solution": {
+      "type": "string",      
+      "metadata": {
+        "description": "Tag to identify associated solution."
+      }
+    },
+    "ring": {
+      "type": "string",      
+      "metadata": {
+        "description": "Tag to identify associate solution ring (startup/shutdown order)"
+      }
+    }
+  },
+  "variables": {
+    "imagePublisher": "RedHat",
+    "imageOffer": "RHEL",
+    "OSVersion": "7.4",
+    "nicName": "[concat(parameters('dnsLabelPrefix'),'Nic')]",
+    "subnetId": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks/subnets', parameters('existingVNETName'), parameters('existingSubnetName'))]"
+  },
+  "resources": [
+    {
+      "condition": "[equals(parameters('privateIPAllocationMethod'), 'Static')]",
+	  "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'-','Static')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+			  "privateIPAddress": "[parameters('privateIPAddress')]",
+              "privateIPAllocationMethod": "Static",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+	{
+	  "condition": "[equals(parameters('privateIPAllocationMethod'), 'Dynamic')]",
+      "apiVersion": "2015-06-15",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(variables('nicName'),'-','Dynamic')]",
+      "location": "[parameters('location')]",
+      
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-03-30",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('dnsLabelPrefix')]",
+      "location": "[parameters('location')]",
+	  "tags": {
+        "Solution": "[parameters('solution')]",
+        "Ring": "[parameters('ring')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('dnsLabelPrefix')]",
+          "adminUsername": "[parameters('vmAdminUsername')]",
+          "adminPassword": "[parameters('vmAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('imagePublisher')]",
+            "offer": "[variables('imageOffer')]",
+            "sku": "[variables('OSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('dnsLabelPrefix'),'_OsDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": "false"            
+          }
+        }
+      }
+    },
+	{
+        "type": "Microsoft.DevTestLab/schedules",
+        "name": "[concat('shutdown-computevm-',parameters('dnsLabelPrefix'))]",
+        "apiVersion": "2016-05-15",
+        "location": "[parameters('location')]",
+        "dependsOn": [
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('dnsLabelPrefix'))]"
+        ],
+        "properties": {
+            "status": "Enabled",
+            "taskType": "ComputeVmShutdownTask",
+            "dailyRecurrence": {
+                "time": "1900"
+            },
+            "timeZoneId": "Eastern Standard Time",
+            "notificationSettings": {
+                 "status": "Disabled",
+                 "timeInMinutes": 30
+            },
+            "targetResourceId": "[resourceId('Microsoft.Compute/virtualMachines',parameters('dnsLabelPrefix'))]"
+        }       
+	}    
+  ]
+}
+
