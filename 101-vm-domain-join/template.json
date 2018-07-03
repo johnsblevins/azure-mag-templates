@@ -115,6 +115,12 @@
       "metadata": {
         "description": "Tag to identify associate solution ring (startup/shutdown order)"
       }
+    },
+    "requires": {
+      "type": "string",      
+      "metadata": {
+        "description": "Tag to identify other solutions on which this depends.  This is a comma seperated list."
+      }
     }
   },
   "variables": {
@@ -173,7 +179,8 @@
       "location": "[parameters('location')]",
 	  "tags": {
         "Solution": "[parameters('solution')]",
-        "Ring": "[parameters('ring')]"
+        "Ring": "[parameters('ring')]",
+		"Requires": "[parameters('requires')]"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('nicName'),'-',parameters('privateIPAllocationMethod')))]"
