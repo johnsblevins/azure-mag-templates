@@ -19,7 +19,7 @@
     "existingSubnetName": {
       "type": "string",
 	  "defaultValue": "core-subnet",
-	  "allowedValues": ["core-subnet"],
+	  "allowedValues": ["core-subnet","app-subnet-1"],
       "metadata": {
         "description": "Existing subnet that contains the domain controller"
       }
@@ -270,4 +270,5 @@
     }
   ]
 }
+
 
