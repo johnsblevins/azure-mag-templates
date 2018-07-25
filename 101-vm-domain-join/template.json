@@ -204,7 +204,10 @@
           "osDisk": {
             "name": "[concat(parameters('dnsLabelPrefix'),'_OsDisk')]",
             "caching": "ReadWrite",
-            "createOption": "FromImage"
+            "createOption": "FromImage",
+	    "managedDisk": {
+        	"storageAccountType": "Standard_LRS"
+    	    }
           }
         },
         "networkProfile": {
